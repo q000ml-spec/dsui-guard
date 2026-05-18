@@ -180,6 +180,8 @@
 
     // ★変更点：ボタンが押された時に、一発で合っているか間違っているかを判定する仕組みにスッキリ変更
     function checkInputFinal() {
+        // ボタンが押された時に、一発で合っているか間違っているかを判定する仕組み
+    function checkInputFinal() {
         const targetKana = tongueTwistersKana[selectedIndex];
         const userText = document.getElementById('user-input').value.trim(); // 空白を自動除去
 
@@ -187,30 +189,11 @@
         if (userText === targetKana) {
             clearInterval(timerInterval);
             alert("見事な滑舌！あなたはシラフです。スマホの使用を許可します。");
-            location.reload();
+            // LINEアプリを強制的に開く
+            window.location.href = "line://"; 
         } else {
-            // 間違っていた場合
-            missCount++;
-            document.getElementById('miss-display').innerText = `ミス: ${missCount} / 3`;
-            
-            if (missCount >= 3) {
-                clearInterval(timerInterval);
-                gameOver("指がもつれすぎてお話になりません。スマホを裏返して寝てください。");
-            } else {
-                alert("文字が違います！よーく見直して打ち直してください。");
-            }
+            // 1回でも間違えたら、問答無用でゲームオーバーへ直行！
+            clearInterval(timerInterval);
+            gameOver("1文字でも間違えたら即アウトです。指がもつれすぎてお話になりません。スマホを裏返して寝てください。");
         }
     }
-
-    function gameOver(message) {
-        document.body.style.backgroundColor = "#550000";
-        document.getElementById('test-screen').innerHTML = `
-            <h2 style="color: #ff3333;">⚠️ DSUIガード作動：泥酔認定</h2>
-            <p style="font-size: 1.3rem; font-weight: bold; margin: 30px 0;">${message}</p>
-            <button class="btn-main" style="background: #333;" onclick="location.reload()">もう一度テスト（水飲んでから）</button>
-        `;
-    }
-</script>
-
-</body>
-</html>
