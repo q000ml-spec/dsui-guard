@@ -56,7 +56,6 @@
             width: 80%;
             margin-top: 20px;
         }
-        /* 判定ボタン用のデザイン */
         .btn-check {
             background: linear-gradient(135deg, #00ffcc, #0099ff);
             color: #0d0d1a;
@@ -110,47 +109,45 @@
 
     <!-- スタート画面 -->
     <div id="start-screen" class="card">
-        <p>おい。<br>いい加減にしろよ。</p>
-        <button class="btn-main" onclick="openTest()">🔒 酔ってない</button>
+        <p>これより夜の街へ出撃します。<br>やらかす前にプロテクトを起動してください。</p>
+        <button class="btn-main" onclick="openTest()">🔒 ガード起動</button>
     </div>
 
     <!-- テスト画面 -->
     <div id="test-screen" class="card">
-        <h3>【シラフ検査：早口言葉】</h3>
-        <p>以下の早口言葉を**ひらがな**で正確に入力し、一番下のボタンを押してください。</p>
+        <h3>【シラフ検査：超激ムズ早口言葉】</h3>
+        <p>以下の早口言葉を**ひらがな**で正確に入力し、一番下のボタンを押してください。<br><strong style="color: #ff3333;">※1文字でも間違えたら即アウトです。</strong></p>
         
         <div class="word-display" id="target-word"></div>
         
         <input type="text" id="user-input" class="input-box" placeholder="ここにひらがなで入力">
         
-        <!-- ★変更点：文字が確定してからゆっくり押せる判定ボタンを設置 -->
         <button class="btn-check" onclick="checkInputFinal()">🔍 シラフ判定を行う</button>
         
-        <div class="timer" id="timer-display">残り時間: 30 秒</div> <!-- ボタンを押す時間を考慮して30秒に延長 -->
-        <div id="miss-display" style="margin-top: 10px; color: #ffaa00;">ミス: 0 / 3</div>
+        <div class="timer" id="timer-display">残り時間: 30 秒</div>
     </div>
 </div>
 
 <script>
+    // 最凶の激ムズ早口言葉リスト
     const tongueTwisters = [
-        "東京特許許可局局長",
-        "坊主が屏風に上手に坊主の絵を描いた",
-        "新春シャンソンショー",
-        "客客柿食う客柿食う客",
-        "魔術師魔術修業中"
+        "魔術師マサチューセッツ州知事選出馬、手術中につき急遽出馬却下",
+        "メール二十二通中二十通がフルーツジュース抽出中",
+        "新進シャンソン歌手総出演新春シャンソンショー",
+        "東京特許許可局局長今日急遽休暇許可拒否",
+        "歌唄いが来て歌唄えと言うが、歌唄いくらい歌うまければ歌唄うが、歌唄いくらい歌うまくないので歌唄わぬ"
     ];
 
     const tongueTwistersKana = [
-        "とうきょうとっきょきょかきょくきょくちょう",
-        "ぼうずがびょうぶにじょうずにぼうずのえをかいた",
-        "しんしゅんしゃんそんしょー",
-        "きゃくきゃくかきくうきゃくかきくうきゃく",
-        "まじゅつしまじゅつしゅぎょうちゅう"
+        "まじゅつしまさちゅーせっつしゅうちじせんしゅつばしゅじゅつちゅうにつききゅうきょしゅつばきゃっか",
+        "めーるにじゅうにつうちゅうにじゅっつうがふるーつじゅーすちゅうしゅつちゅう",
+        "しんしんしゃんそんかしゅそうしゅつえんしんしゅんしゃんそんしょー",
+        "とうきょうとっきょきょかきょくきょくちょうきょうきゅうきょきゅうかきょかきょひ",
+        "うたうたいがきてうたうたえというがうたうたいくらいうたうまければうたうたうがうたうたいくらいうたうまくないのでうたうたわぬ"
     ];
 
     let selectedIndex = 0;
-    let missCount = 0;
-    let timeLeft = 30; 
+    let timeLeft = 30; // 必要に応じてここを20に縮めるとさらに絶望的になります
     let timerInterval;
 
     function openTest() {
@@ -178,22 +175,33 @@
         }, 1000);
     }
 
-    // ★変更点：ボタンが押された時に、一発で合っているか間違っているかを判定する仕組みにスッキリ変更
-    function checkInputFinal() {
-        // ボタンが押された時に、一発で合っているか間違っているかを判定する仕組み
+    // シラフ判定（一撃アウトモード）
     function checkInputFinal() {
         const targetKana = tongueTwistersKana[selectedIndex];
-        const userText = document.getElementById('user-input').value.trim(); // 空白を自動除去
+        const userText = document.getElementById('user-input').value.trim();
 
-        // 完璧に一致している場合
+        // 完璧に一致している場合のみクリア
         if (userText === targetKana) {
             clearInterval(timerInterval);
             alert("見事な滑舌！あなたはシラフです。スマホの使用を許可します。");
             // LINEアプリを強制的に開く
             window.location.href = "line://"; 
         } else {
-            // 1回でも間違えたら、問答無用でゲームオーバーへ直行！
+            // 1文字でも違えば即ゲームオーバー
             clearInterval(timerInterval);
             gameOver("1文字でも間違えたら即アウトです。指がもつれすぎてお話になりません。スマホを裏返して寝てください。");
         }
     }
+
+    function gameOver(message) {
+        document.body.style.backgroundColor = "#550000";
+        document.getElementById('test-screen').innerHTML = `
+            <h2 style="color: #ff3333;">⚠️ DSUIガード作動：泥酔認定</h2>
+            <p style="font-size: 1.3rem; font-weight: bold; margin: 30px 0;">${message}</p>
+            <button class="btn-main" style="background: #333;" onclick="location.reload()">もう一度テスト（水飲んでから）</button>
+        `;
+    }
+</script>
+
+</body>
+</html>
