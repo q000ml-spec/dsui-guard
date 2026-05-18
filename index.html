@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DSUIガード</title>
+    <!-- PWAのための設定 -->
+    <link rel="manifest" href="manifest.json">
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js');
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background-color: #0d0d1a;
+            color: #ffffff;
+            text-align: center;
+            padding: 30px 20px;
+            margin: 0;
+            transition: background-color 0.5s; /* 背景色変化をスムーズに */
+        }
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        h1 {
+            font-size: 2.5rem;
+            color: #00ffcc;
+            text-shadow: 0 0 10px rgba(0, 255, 204, 0.5);
+            margin-bottom: 5px;
+        }
+        .subtitle {
+            font-size: 0.9rem;
+            color: #8888aa;
+            margin-bottom: 30px;
+            letter-spacing: 2px;
+        }
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 30px 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .btn-main {
+            background: linear-gradient(135deg, #ff0055, #ff5500);
+            color: white;
+            border: none;
+            padding: 20px 40px;
+            font-size: 1.3rem;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 5px 20px rgba(255, 0, 85, 0.4);
+            width: 80%;
+            margin-top: 20px;
+        }
+        #test-screen {
+            display: none;
+        }
+        /* 早口言葉の表示エリア */
+        .word-display {
+            font-size: 1.4rem;
+            background: #1a1a3a;
+            padding: 20px 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            color: #ffcc00;
+            font-weight: bold;
+            line-height: 1.6;
+            word-break: break-all;
+        }
+        .input-box {
+            width: 90%;
+            padding: 15px;
+            font-size: 1.2rem;
+            border-radius: 10px;
+            border: 2px solid #00ffcc;
+            background: #0d0d1a;
+            color: white;
+            text-align: center;
+        }
+        .timer {
+            font-size: 1.2rem;
+            color: #ff3333;
+            font-weight: bold;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>DSUI GUARD</h1>
+    <div class="subtitle">- 泥酔スマホ操作防止システム -</div>
+
+    <!-- スタート画面 -->
+    <div id="start-screen" class="card">
+        <p>これより夜の街へ出撃します。<br>やらかす前にプロテクトを起動してください。</p>
+        <button class="btn-main" onclick="openTest()">🔒 ガード起動</button>
+    </div>
+
+    <!-- テスト画面 -->
+    <div id="test-screen" class="card">
+        <h3>【シラフ検査：早口言葉】</h3>
+        <p>以下の早口言葉を**ひらがな**で正確に入力してください。<br>（ミス3回、または時間切れでロック）</p>
+        
+        <!-- ここにランダムで早口言葉が入ります -->
+        <div class="word-display" id="target-word"></div>
+        
+        <input type="text" id="user-input" class="input-box" placeholder="ここにひらがなで入力" oninput="checkInput()">
+        
+        <div class="timer" id="timer-display">残り時間: 20 秒</div>
+        <div id="miss-display" style="margin-top: 10px; color: #ffaa00;">ミス: 0 / 3</div>
+    </div>
+</div>
+
+<script>
+    // 早口言葉のリスト（ひらがな限定にすることで判定を正確にしています）
+    const tongueTwisters = [
+        "東京特許許可局局長",
+        "坊主が屏風に上手に坊主の絵を描いた",
+        "新春シャンソンショー",
+        "客客柿食う客柿食う客",
+        "魔術師魔術修業中"
+    ];
+
+    // 入力してもらう「ひらがな正解データ」
+    const tongueTwistersKana = [
+        "とうきょうとっきょきょかきょくきょくちょう",
+        "ぼうずがびょうぶにじょうずにぼうずのえをかいた",
+        "しんしゅんしゃんそんしょー",
+        "きゃくきゃくかきくうきゃくかきくうきゃく",
+        "まじゅつしまじゅつしゅぎょうちゅう"
+    ];
+
+    let selectedIndex = 0;
+    let missCount = 0;
+    let timeLeft = 20; // 早口言葉は長いので20秒に延長
+    let timerInterval;
+
+    function openTest() {
+        document.getElementById('start-screen').style.display = 'none';
+        document.getElementById('test-screen').style.display = 'block';
+        
+        // ランダムで早口言葉を選ぶ
+        selectedIndex = Math.floor(Math.random() * tongueTwisters.length);
+        
+        // 画面には漢字混じりの読みやすい文字を表示
+        document.getElementById('target-word').innerHTML = 
+            `${tongueTwisters[selectedIndex]}<br><span style="font-size:0.9rem; color:#aaa;">（${tongueTwistersKana[selectedIndex]}）</span>`;
+        
+        document.getElementById('user-input').focus();
+        startTimer();
+    }
+
+    function startTimer() {
+        timerInterval = setInterval(() => {
+            timeLeft--;
+            document.getElementById('timer-display').innerText = `残り時間: ${timeLeft} 秒`;
+            
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                gameOver("時間切れ！呂律（ろれつ）が回っていません。おやすみなさい。");
+            }
+        }, 1000);
+    }
+
+    function checkInput() {
+        const targetKana = tongueTwistersKana[selectedIndex]; // 正解のひらがな
+        const userText = document.getElementById('user-input').value;
+
+        // 入力中のひらがなチェック
+        if (!targetKana.startsWith(userText)) {
+            missCount++;
+            document.getElementById('miss-display').innerText = `ミス: ${missCount} / 3`;
+            document.getElementById('user-input').value = userText.slice(0, -1);
+            
+            if (missCount >= 3) {
+                clearInterval(timerInterval);
+                gameOver("指がもつれすぎてお話になりません。スマホを裏返して寝てください。");
+            }
+        }
+
+        // クリア判定
+        if (userText === targetKana) {
+            clearInterval(timerInterval);
+            alert("見事な滑舌！あなたはシラフです。スマホの使用を許可します。");
+            location.reload();
+        }
+    }
+
+    function gameOver(message) {
+        document.body.style.backgroundColor = "#550000";
+        document.getElementById('test-screen').innerHTML = `
+            <h2 style="color: #ff3333;">⚠️ DSUIガード作動：泥酔認定</h2>
+            <p style="font-size: 1.3rem; font-weight: bold; margin: 30px 0;">${message}</p>
+            <button class="btn-main" style="background: #333;" onclick="location.reload()">もう一度テスト（水飲んでから）</button>
+        `;
+    }
+</script>
+
+</body>
+</html>
